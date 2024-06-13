@@ -1,25 +1,45 @@
+import 'dart:async';
+
 import 'package:AquaMinder/Controller/LoginController.dart';
+import 'package:flutter/material.dart';
+import 'package:AquaMinder/Controller/waterInTakeController.dart';
 import 'package:AquaMinder/Entidades/waterInTake.dart';
 import 'package:AquaMinder/View/user_profile_view.dart';
 import 'package:AquaMinder/View/weekly_graph_view.dart';
-import 'package:flutter/material.dart';
 
 class InitialView extends StatefulWidget {
   const InitialView({Key? key}) : super(key: key);
 
   @override
-  State<InitialView> createState() => _InitialViewState();
+  _InitialViewState createState() => _InitialViewState();
 }
 
 class _InitialViewState extends State<InitialView> {
+  late StreamController<WaterIntake> _controller;
   late WaterIntake _waterIntakeData;
 
   @override
   void initState() {
     super.initState();
-    _waterIntakeData = WaterIntake(userId:LoginController().idUsuario(),waterIntake: 0, dailyGoal: 2000, fixedAmount: 200);
+    _controller = StreamController<WaterIntake>();
+    _fetchWaterIntakeData();
   }
 
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
+
+void _fetchWaterIntakeData() async {
+  try {
+    final WaterIntake waterIntakeData = await waterInTakeController().buscar();
+    _waterIntakeData = waterIntakeData;
+    _controller.add(_waterIntakeData);
+  } catch (e) {
+    print('Erro ao carregar os dados de ingestão de água: $e');
+  }
+}
   void _addWater(int amount) {
     setState(() {
       _waterIntakeData.waterIntake += amount;
@@ -27,6 +47,7 @@ class _InitialViewState extends State<InitialView> {
         _showCongratulationsDialog();
         _waterIntakeData.congratulationsShown = true;
       }
+      _controller.add(_waterIntakeData);
     });
   }
 
@@ -41,6 +62,7 @@ class _InitialViewState extends State<InitialView> {
       if (_waterIntakeData.waterIntake < _waterIntakeData.dailyGoal) {
         _waterIntakeData.congratulationsShown = false;
       }
+      _controller.add(_waterIntakeData);
     });
   }
 
@@ -49,6 +71,7 @@ class _InitialViewState extends State<InitialView> {
       _waterIntakeData.dailyGoal = goal;
     });
     Navigator.of(context).pop();
+    _controller.add(_waterIntakeData);
   }
 
   void _setFixedAmount(int amount) {
@@ -56,6 +79,7 @@ class _InitialViewState extends State<InitialView> {
       _waterIntakeData.fixedAmount = amount;
     });
     Navigator.of(context).pop();
+    _controller.add(_waterIntakeData);
   }
 
   void _showCongratulationsDialog() {
@@ -226,8 +250,6 @@ class _InitialViewState extends State<InitialView> {
 
   @override
   Widget build(BuildContext context) {
-    double progress = _waterIntakeData.waterIntake / _waterIntakeData.dailyGoal;
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -258,6 +280,7 @@ class _InitialViewState extends State<InitialView> {
                         style: TextStyle(color: Color.fromARGB(255, 251, 4, 4)),
                       ),
                       onPressed: () {
+                        LoginController().logout();
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },
@@ -282,162 +305,190 @@ class _InitialViewState extends State<InitialView> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Consumo de Água Diário',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 200,
-                    height: 200,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 10,
-                      backgroundColor: Colors.blue[100],
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                    ),
-                  ),
-                  Positioned(
-                    child: Text(
-                      '${_waterIntakeData.waterIntake}/${_waterIntakeData.dailyGoal} ml',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _addWater(_waterIntakeData.fixedAmount),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        minimumSize: const Size(100, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                    child: Text(
-                      '${_waterIntakeData.fixedAmount} +',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: 64),
-                  ElevatedButton(
-                    onPressed: () => _removeWater(_waterIntakeData.fixedAmount),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        minimumSize: const Size(100, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                    child: Text(
-                      '${_waterIntakeData.fixedAmount} -',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                children: [
-                  ElevatedButton(
-                    onPressed: _showFixedAmountDialog,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 50),
-                      backgroundColor: Colors.lightBlue[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+        child: StreamBuilder<WaterIntake>(
+          stream: _controller.stream,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Erro ao carregar os dados de consumo de água.'),
+              );
+            }
+
+            if (!snapshot.hasData) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            final waterIntakeData = snapshot.data!;
+
+            double progress = waterIntakeData.waterIntake / waterIntakeData.dailyGoal;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Consumo de Água Diário',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 200,
+                        height: 200,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 10,
+                          backgroundColor: Colors.blue[100],
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Ajustar Adicional Fixo',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _showGoalDialog,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 50),
-                      backgroundColor: Colors.lightBlue[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                      Positioned(
+                        child: Text(
+                          '${waterIntakeData.waterIntake}/${waterIntakeData.dailyGoal} ml',
+                          style: const TextStyle(fontSize: 20),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Editar Meta Diária',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                    ),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => WeeklyGraphView()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 50),
-                      backgroundColor: Colors.lightBlue[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => _addWater(waterIntakeData.fixedAmount),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          minimumSize: const Size(100, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          '${waterIntakeData.fixedAmount} +',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Gráfico Semanal',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _showAddWaterDialog,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 50),
-                      backgroundColor: Colors.lightBlue[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                      const SizedBox(width: 64),
+                      ElevatedButton(
+                        onPressed: () => _removeWater(waterIntakeData.fixedAmount),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          minimumSize: const Size(100, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          '${waterIntakeData.fixedAmount} -',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Adicionar Água',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _showFixedAmountDialog,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(100, 50),
+                          backgroundColor: Colors.lightBlue[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Ajustar Adicional Fixo',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _showGoalDialog,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(100, 50),
+                          backgroundColor: Colors.lightBlue[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Editar Meta Diária',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WeeklyGraphView(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(100, 50),
+                          backgroundColor: Colors.lightBlue[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Gráfico Semanal',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _showAddWaterDialog,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(100, 50),
+                          backgroundColor: Colors.lightBlue[400],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Adicionar Água',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
