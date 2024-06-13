@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WaterIntake {
-  int userId;
+  String userId;
   int waterIntake;
   int dailyGoal;
   int fixedAmount;
@@ -17,6 +17,7 @@ class WaterIntake {
 
   Map<String, dynamic> toJson() {
     return {
+      'userId': userId,
       'waterIntake': waterIntake,
       'dailyGoal': dailyGoal,
       'fixedAmount': fixedAmount,
