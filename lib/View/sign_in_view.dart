@@ -1,3 +1,4 @@
+import 'package:AquaMinder/Controller/LoginController.dart';
 import 'package:flutter/material.dart';
 import 'package:AquaMinder/View/initial_view.dart';
 import 'package:AquaMinder/View/forgot_password_view.dart';
@@ -20,7 +21,7 @@ class _SignInViewState extends State<SignInView> {
   bool _senhaValida = true;
   bool _loginValido = true;
 
-  void _login() {
+  void _login() async {
     if (_emailController.text.isEmpty || _senhaController.text.isEmpty) {
       setState(() {
         _emailValido = _emailController.text.isNotEmpty;
@@ -29,10 +30,15 @@ class _SignInViewState extends State<SignInView> {
       return;
     }
 
-    if (SimulaBD.login(_emailController.text, _senhaController.text)) {
-      Navigator.push(
+    bool loginValido = await LoginController().login(
+      context,
+      _emailController.text,
+      _senhaController.text,
+    );
+    if (loginValido) {
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(builder: (context) => InitialView()),
+        'principal',
       );
     } else {
       setState(() {
@@ -42,23 +48,23 @@ class _SignInViewState extends State<SignInView> {
   }
 
   void _navegateSobre(BuildContext context) {
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(builder: (context) => AboutView()),
+      'sobre',
     );
   }
 
   void _recuperarSenha() {
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(builder: (context) => ForgotPasswordView()),
+      'redefinirSenha',
     );
   }
 
   void _criarConta() {
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(builder: (context) => const SignUpView()),
+      'cadastrar',
     );
   }
 

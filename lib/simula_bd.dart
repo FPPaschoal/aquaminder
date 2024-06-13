@@ -1,5 +1,56 @@
-import 'package:AquaMinder/Entidades/Item.dart';
-import 'package:AquaMinder/Entidades/Lista.dart';
+class Item {
+  String nome;
+  double quantidade;
+  String unidadeDeMedida;
+  String categoria;
+  String? notasAdicionais;
+  bool comprado;
+
+  Item({
+    required this.nome,
+    required this.quantidade,
+    required this.unidadeDeMedida,
+    required this.categoria,
+    this.notasAdicionais,
+    required this.comprado,
+  });
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'nome': nome,
+      'quantidade': quantidade,
+      'unidadeDeMedida': unidadeDeMedida,
+      'categoria': categoria,
+      'notasAdicionais': notasAdicionais,
+      'comprado': comprado,
+    };
+  }
+
+  factory Item.fromJson(Map<String, dynamic> json) {
+    return Item(
+      nome: json['nome'],
+      quantidade: json['quantidade'],
+      unidadeDeMedida: json['unidadeDeMedida'],
+      categoria: json['categoria'],
+      notasAdicionais: json['notasAdicionais'],
+      comprado: json['comprado'],
+    );
+  }
+}
+
+class Lista{
+  String nome;
+  List<Item> itens;
+
+  Lista({required this.nome,required this.itens});
+
+  void adicionarItem(Item item){
+
+  }
+  void excluirItem(String nome){
+    
+  }
+}
 
 class SimulaBD {
   static String email = 'adm@admin.com';

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "261106161508",
+    "project_id": "aquaminder-ft",
+    "storage_bucket": "aquaminder-ft.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261106161508:android:e6c171966ee546ccdd4c71",
+        "android_client_info": {
+          "package_name": "com.example.AquaMinder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbdmX9lc_sYVf1EfGtQMNnraULQjqb3_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:AquaMinder/View/weekly_graph_view.dart';
+import 'package:AquaMinder/Controller/LoginController.dart';
+import 'package:AquaMinder/Entidades/waterInTake.dart';
 import 'package:AquaMinder/View/user_profile_view.dart';
+import 'package:AquaMinder/View/weekly_graph_view.dart';
+import 'package:flutter/material.dart';
 
 class InitialView extends StatefulWidget {
   const InitialView({Key? key}) : super(key: key);
@@ -10,45 +12,48 @@ class InitialView extends StatefulWidget {
 }
 
 class _InitialViewState extends State<InitialView> {
-  int _waterIntake = 0;
-  int _dailyGoal = 2000;
-  int _fixedAmount = 200;
-  bool _congratulationsShown = false;
+  late WaterIntake _waterIntakeData;
+
+  @override
+  void initState() {
+    super.initState();
+    _waterIntakeData = WaterIntake(userId:LoginController().idUsuario(),waterIntake: 0, dailyGoal: 2000, fixedAmount: 200);
+  }
 
   void _addWater(int amount) {
     setState(() {
-      _waterIntake += amount;
-      if (_waterIntake >= _dailyGoal && !_congratulationsShown) {
+      _waterIntakeData.waterIntake += amount;
+      if (_waterIntakeData.waterIntake >= _waterIntakeData.dailyGoal && !_waterIntakeData.congratulationsShown) {
         _showCongratulationsDialog();
-        _congratulationsShown = true;
+        _waterIntakeData.congratulationsShown = true;
       }
     });
   }
 
   void _removeWater(int amount) {
     setState(() {
-      if (_waterIntake > 0) {
-        _waterIntake -= amount;
-        if (_waterIntake < 0) {
-          _waterIntake = 0;
+      if (_waterIntakeData.waterIntake > 0) {
+        _waterIntakeData.waterIntake -= amount;
+        if (_waterIntakeData.waterIntake < 0) {
+          _waterIntakeData.waterIntake = 0;
         }
       }
-      if (_waterIntake < _dailyGoal) {
-        _congratulationsShown = false;
+      if (_waterIntakeData.waterIntake < _waterIntakeData.dailyGoal) {
+        _waterIntakeData.congratulationsShown = false;
       }
     });
   }
 
   void _setDailyGoal(int goal) {
     setState(() {
-      _dailyGoal = goal;
+      _waterIntakeData.dailyGoal = goal;
     });
     Navigator.of(context).pop();
   }
 
   void _setFixedAmount(int amount) {
     setState(() {
-      _fixedAmount = amount;
+      _waterIntakeData.fixedAmount = amount;
     });
     Navigator.of(context).pop();
   }
@@ -59,8 +64,7 @@ class _InitialViewState extends State<InitialView> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Parabéns!'),
-          content:
-              const Text('Você atingiu sua meta diária de consumo de água!'),
+          content: const Text('Você atingiu sua meta diária de consumo de água!'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -222,7 +226,7 @@ class _InitialViewState extends State<InitialView> {
 
   @override
   Widget build(BuildContext context) {
-    double progress = _waterIntake / _dailyGoal;
+    double progress = _waterIntakeData.waterIntake / _waterIntakeData.dailyGoal;
 
     return Scaffold(
       appBar: AppBar(
@@ -303,7 +307,7 @@ class _InitialViewState extends State<InitialView> {
                   ),
                   Positioned(
                     child: Text(
-                      '$_waterIntake/$_dailyGoal ml',
+                      '${_waterIntakeData.waterIntake}/${_waterIntakeData.dailyGoal} ml',
                       style: const TextStyle(fontSize: 20),
                     ),
                   ),
@@ -316,27 +320,31 @@ class _InitialViewState extends State<InitialView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () => _addWater(_fixedAmount),
+                    onPressed: () => _addWater(_waterIntakeData.fixedAmount),
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         minimumSize: const Size(100, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         )),
-                    child: Text('$_fixedAmount +',
-                        style: const TextStyle(color: Colors.white)),
+                    child: Text(
+                      '${_waterIntakeData.fixedAmount} +',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                   const SizedBox(width: 64),
                   ElevatedButton(
-                    onPressed: () => _removeWater(_fixedAmount),
+                    onPressed: () => _removeWater(_waterIntakeData.fixedAmount),
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         minimumSize: const Size(100, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         )),
-                    child: Text('$_fixedAmount -',
-                        style: const TextStyle(color: Colors.white)),
+                    child: Text(
+                      '${_waterIntakeData.fixedAmount} -',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),

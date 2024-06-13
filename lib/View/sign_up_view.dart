@@ -1,3 +1,4 @@
+import 'package:AquaMinder/Controller/LoginController.dart';
 import 'package:flutter/material.dart';
 
 class SignUpView extends StatefulWidget {
@@ -35,10 +36,11 @@ class _SignUpViewState extends State<SignUpView> {
         _senhaValida &&
         _confirmarSenhaValida &&
         _senhaCorrespondem) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Conta criada com sucesso!')),
-      );
-      Navigator.pop(context);
+      LoginController().criarConta(context, _nomeController.text,
+          _emailController.text, _senhaController.text);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Por favor, preencha todos os campos corretamente.')));
     }
   }
 
