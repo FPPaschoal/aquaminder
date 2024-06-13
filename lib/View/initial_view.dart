@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:AquaMinder/Controller/LoginController.dart';
 import 'package:flutter/material.dart';
 import 'package:AquaMinder/Controller/waterInTakeController.dart';
 import 'package:AquaMinder/Entidades/waterInTake.dart';
@@ -36,7 +37,6 @@ void _fetchWaterIntakeData() async {
     _waterIntakeData = waterIntakeData;
     _controller.add(_waterIntakeData);
   } catch (e) {
-    // Tratamento de erro, se necessário
     print('Erro ao carregar os dados de ingestão de água: $e');
   }
 }
@@ -280,6 +280,7 @@ void _fetchWaterIntakeData() async {
                         style: TextStyle(color: Color.fromARGB(255, 251, 4, 4)),
                       ),
                       onPressed: () {
+                        LoginController().logout();
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },

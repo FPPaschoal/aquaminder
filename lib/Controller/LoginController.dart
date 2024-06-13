@@ -1,5 +1,7 @@
 import 'dart:html';
 
+import 'package:AquaMinder/Controller/waterInTakeController.dart';
+import 'package:AquaMinder/Entidades/waterInTake.dart';
 import 'package:AquaMinder/View/util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +59,10 @@ class LoginController {
 
   logout() {
     FirebaseAuth.instance.signOut();
+  }
+
+  retornaDados(context){
+    
   }
 
   idUsuario() {
