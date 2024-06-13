@@ -42,24 +42,24 @@ class LoginController {
       }
       return false;
     }
+  }
 
-    esqueceuSenha(context, String email) {
-      if (email.isNotEmpty) {
-        FirebaseAuth.instance.sendPasswordResetEmail(
-          email: email,
-        );
-        sucesso(context, 'Email enviado com sucesso!');
-      } else {
-        erro(context, 'Não foi possível enviar o e-mail');
-      }
+  esqueceuSenha(context, String email) {
+    if (email.isNotEmpty) {
+      FirebaseAuth.instance.sendPasswordResetEmail(
+        email: email,
+      );
+      sucesso(context, 'Email enviado com sucesso!');
+    } else {
+      erro(context, 'Não foi possível enviar o e-mail');
     }
+  }
 
-    logout() {
-      FirebaseAuth.instance.signOut();
-    }
+  logout() {
+    FirebaseAuth.instance.signOut();
+  }
 
-    idUsuario() {
-      return FirebaseAuth.instance.currentUser!.uid;
-    }
+  idUsuario() {
+    return FirebaseAuth.instance.currentUser!.uid;
   }
 }
